@@ -18,6 +18,7 @@ public:
     GeometricObject();
     GeometricObject(const Color &color);
     virtual bool hitMe(double& t, const Ray& ray) = 0;
+    virtual Vec3 getNormal(const Vec3& point) = 0;
 };
 
 

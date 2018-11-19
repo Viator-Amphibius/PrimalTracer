@@ -42,3 +42,9 @@ const Vec3 &Triangle::getC() const {
 void Triangle::setC(const Vec3 &C) {
     Triangle::C = C;
 }
+
+Vec3 Triangle::getNormal(const Vec3 &point) {
+    Vec3 normal((B-A) ^ (C-A));
+    normal.normalize();
+    return normal;
+}

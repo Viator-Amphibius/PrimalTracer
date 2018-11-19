@@ -98,6 +98,12 @@
 		<Unit filename="C:/Users/khale/CLionProjects/Graphics/GeometricObject.h">
 			<Option target="Graphics"/>
 		</Unit>
+		<Unit filename="C:/Users/khale/CLionProjects/Graphics/Light.cpp">
+			<Option target="Graphics"/>
+		</Unit>
+		<Unit filename="C:/Users/khale/CLionProjects/Graphics/Light.h">
+			<Option target="Graphics"/>
+		</Unit>
 		<Unit filename="C:/Users/khale/CLionProjects/Graphics/Matrix3.cpp">
 			<Option target="Graphics"/>
 		</Unit>

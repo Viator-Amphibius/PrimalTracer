@@ -203,6 +203,33 @@ GeometricObject.cpp.s:
 	$(MAKE) -f CMakeFiles\Graphics.dir\build.make CMakeFiles/Graphics.dir/GeometricObject.cpp.s
 .PHONY : GeometricObject.cpp.s
 
+Light.obj: Light.cpp.obj
+
+.PHONY : Light.obj
+
+# target to build an object file
+Light.cpp.obj:
+	$(MAKE) -f CMakeFiles\Graphics.dir\build.make CMakeFiles/Graphics.dir/Light.cpp.obj
+.PHONY : Light.cpp.obj
+
+Light.i: Light.cpp.i
+
+.PHONY : Light.i
+
+# target to preprocess a source file
+Light.cpp.i:
+	$(MAKE) -f CMakeFiles\Graphics.dir\build.make CMakeFiles/Graphics.dir/Light.cpp.i
+.PHONY : Light.cpp.i
+
+Light.s: Light.cpp.s
+
+.PHONY : Light.s
+
+# target to generate assembly for a file
+Light.cpp.s:
+	$(MAKE) -f CMakeFiles\Graphics.dir\build.make CMakeFiles/Graphics.dir/Light.cpp.s
+.PHONY : Light.cpp.s
+
 Matrix3.obj: Matrix3.cpp.obj
 
 .PHONY : Matrix3.obj
@@ -383,6 +410,9 @@ help:
 	@echo ... GeometricObject.obj
 	@echo ... GeometricObject.i
 	@echo ... GeometricObject.s
+	@echo ... Light.obj
+	@echo ... Light.i
+	@echo ... Light.s
 	@echo ... Matrix3.obj
 	@echo ... Matrix3.i
 	@echo ... Matrix3.s

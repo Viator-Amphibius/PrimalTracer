@@ -36,7 +36,9 @@ double Color::getR() const {
 }
 
 void Color::setR(double r) {
-    Color::r = r;
+    if(r>1) Color::r = 1;
+    else if(r<0) Color::r = 0;
+    else Color::r = r;
 }
 
 double Color::getG() const {
@@ -44,7 +46,9 @@ double Color::getG() const {
 }
 
 void Color::setG(double g) {
-    Color::g = g;
+    if(g>1) Color::g = 1;
+    else if(g<0) Color::g = 0;
+    else Color::g = g;
 }
 
 double Color::getB() const {
@@ -52,5 +56,7 @@ double Color::getB() const {
 }
 
 void Color::setB(double b) {
-    Color::b = b;
+    if(b>1) Color::b = 1;
+    else if(b<0) Color::b = 0;
+    else Color::b = b;
 }

@@ -14,6 +14,11 @@ CMakeFiles/Graphics.dir/GeometricObject.cpp.obj: ../GeometricObject.h
 CMakeFiles/Graphics.dir/GeometricObject.cpp.obj: ../Ray.h
 CMakeFiles/Graphics.dir/GeometricObject.cpp.obj: ../Vec3.h
 
+CMakeFiles/Graphics.dir/Light.cpp.obj: ../Color.h
+CMakeFiles/Graphics.dir/Light.cpp.obj: ../Light.cpp
+CMakeFiles/Graphics.dir/Light.cpp.obj: ../Light.h
+CMakeFiles/Graphics.dir/Light.cpp.obj: ../Vec3.h
+
 CMakeFiles/Graphics.dir/Matrix3.cpp.obj: ../Matrix3.cpp
 CMakeFiles/Graphics.dir/Matrix3.cpp.obj: ../Matrix3.h
 CMakeFiles/Graphics.dir/Matrix3.cpp.obj: ../Vec3.h
@@ -43,6 +48,7 @@ CMakeFiles/Graphics.dir/Vec3.cpp.obj: ../Vec3.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../Camera.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../Color.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../GeometricObject.h
+CMakeFiles/Graphics.dir/main.cpp.obj: ../Light.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../Matrix3.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../Ray.h
 CMakeFiles/Graphics.dir/main.cpp.obj: ../Sphere.h

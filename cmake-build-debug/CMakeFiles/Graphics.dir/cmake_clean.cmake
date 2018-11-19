@@ -8,6 +8,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/Graphics.dir/Sphere.cpp.obj"
   "CMakeFiles/Graphics.dir/Triangle.cpp.obj"
   "CMakeFiles/Graphics.dir/Matrix3.cpp.obj"
+  "CMakeFiles/Graphics.dir/Light.cpp.obj"
   "Graphics.pdb"
   "Graphics.exe"
   "Graphics.exe.manifest"

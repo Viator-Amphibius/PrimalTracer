@@ -20,6 +20,12 @@ C:/Users/khale/CLionProjects/Graphics/Color.h
 Ray.h
 C:/Users/khale/CLionProjects/Graphics/Ray.h
 
+C:/Users/khale/CLionProjects/Graphics/Light.h
+Vec3.h
+C:/Users/khale/CLionProjects/Graphics/Vec3.h
+Color.h
+C:/Users/khale/CLionProjects/Graphics/Color.h
+
 C:/Users/khale/CLionProjects/Graphics/Matrix3.h
 Vec3.h
 C:/Users/khale/CLionProjects/Graphics/Vec3.h
@@ -65,4 +71,6 @@ Matrix3.h
 C:/Users/khale/CLionProjects/Graphics/Matrix3.h
 Triangle.h
 C:/Users/khale/CLionProjects/Graphics/Triangle.h
+Light.h
+C:/Users/khale/CLionProjects/Graphics/Light.h
 

@@ -9,12 +9,17 @@
 #include "Ray.h"
 #include "Matrix3.h"
 #include "Triangle.h"
+#include "Light.h"
 
 using namespace  std;
+
+#define AMBIENT 10.0/255.0
+
+
 Camera* readCamera(const string& fileName, string& outFileName);
 Color*** initImage(const Camera& camera);
 void readScene(vector<GeometricObject*>& scene, const string& sceneFileName);
-void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera);
+void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera, const Light& light);
 int traceRay(Ray* ray, vector<GeometricObject*>& scene, double &tmin);
 void writeImage(Color*** imagePlane, string outFileName, const Camera& camera);
 
@@ -29,7 +34,9 @@ int main() {
     Color*** imagePlane = initImage(*camera);
     std::vector<GeometricObject*> scene;
     readScene(scene,"..\\simple_scene.txt");
-    renderImage(scene, imagePlane, *camera);
+
+    Light light(Vec3(30,10,10), Color(200.0/255.0,200.0/255.0,200.0/255.0));
+    renderImage(scene, imagePlane, *camera, light);
     writeImage(imagePlane,outFileName,*camera);
     return 0;
 }
@@ -130,32 +137,47 @@ void readScene(vector<GeometricObject*>& scene, const string& sceneFileName)
     sceneFile.close();
 }
 
-void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera)
+void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera, const Light& light)
 {
     Vec3 m = camera.getE() + camera.getGaze()%camera.getD();
     Vec3 q = m + camera.getU()%camera.getL() + camera.getV()%camera.getT();
-    Vec3* s;
+    Vec3 s(0,0,0);
     double su, sv;
-    Ray* currentRay;
+    Ray currentRay(Vec3(0,0,0), Vec3(0,0,0));
     int closetObject;
     double tmin;
+    double diffuse;
+    Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0);
     for(int i=0; i<camera.getSizeY(); i++)
     {
         for(int j=0; j<camera.getSizeX(); j++)
         {
             su = j*camera.getPixelW() + camera.getHalfPixelW();
             sv = i*camera.getPixelH() + camera.getHalfPixelH();
-            s = new Vec3(q + camera.getU()%su - camera.getV()%sv);
-            currentRay = new Ray(camera.getE(), *s - camera.getE());
-            closetObject = traceRay(currentRay, scene,tmin);
+            s = Vec3(q + camera.getU()%su - camera.getV()%sv);
+            currentRay = Ray(camera.getE(), s - camera.getE());
+            closetObject = traceRay(&currentRay, scene,tmin);
             if(closetObject > -1)
             {
-                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR());
-                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG());
-                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB());
+                point = Vec3(currentRay.getO() + currentRay.getD()%tmin);
+                toLight = Vec3(light.getPos() - (point));
+                toLight.normalize();
+                normal = Vec3(scene[closetObject]->getNormal(point));
+                diffuse = (toLight) * (normal);
+                if(diffuse < 0)
+                    diffuse = 0;
+                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
+                                       scene[closetObject]->getColor().getR()*AMBIENT);
+                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
+                                       scene[closetObject]->getColor().getG()*AMBIENT);
+                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
+                                       scene[closetObject]->getColor().getB()*AMBIENT);
             }
-            delete currentRay;
-            delete s;
+            /*delete normal;
+            delete toLight;
+            delete point;*/
+            //delete currentRay;
+            //delete s;
         }
     }
 }

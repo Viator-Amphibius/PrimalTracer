@@ -40,3 +40,9 @@ double Sphere::getR() const {
 void Sphere::setR(double r) {
     Sphere::r = r;
 }
+
+Vec3 Sphere::getNormal(const Vec3 &point) {
+    Vec3 normal(point-center);
+    normal.normalize();
+    return normal;
+}

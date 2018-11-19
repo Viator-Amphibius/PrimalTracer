@@ -11,6 +11,7 @@ private:
 public:
     Sphere(Vec3 Center, double Radius, Color SphereColor);
     bool hitMe(double& t, const Ray& ray);
+    Vec3 getNormal(const Vec3& point);
 
     const Vec3 &getCenter() const;
 
