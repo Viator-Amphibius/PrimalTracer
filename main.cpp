@@ -20,7 +20,7 @@ Camera* readCamera(const string& fileName, string& outFileName);
 Color*** initImage(const Camera& camera);
 void readScene(vector<GeometricObject*>& scene, const string& sceneFileName);
 void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera, const Light& light);
-int traceRay(Ray* ray, vector<GeometricObject*>& scene, double &tmin);
+int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin);
 void writeImage(Color*** imagePlane, string outFileName, const Camera& camera);
 
 int main() {
@@ -144,8 +144,8 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
     Vec3 s(0,0,0);
     double su, sv;
     Ray currentRay(Vec3(0,0,0), Vec3(0,0,0));
-    int closetObject;
-    double tmin;
+    int closetObject, shadowingObject;
+    double tmin, disposableTmin;
     double diffuse;
     Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0);
     for(int i=0; i<camera.getSizeY(); i++)
@@ -156,22 +156,29 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
             sv = i*camera.getPixelH() + camera.getHalfPixelH();
             s = Vec3(q + camera.getU()%su - camera.getV()%sv);
             currentRay = Ray(camera.getE(), s - camera.getE());
-            closetObject = traceRay(&currentRay, scene,tmin);
+            closetObject = traceRay(currentRay, scene,tmin);
             if(closetObject > -1)
             {
                 point = Vec3(currentRay.getO() + currentRay.getD()%tmin);
                 toLight = Vec3(light.getPos() - (point));
                 toLight.normalize();
-                normal = Vec3(scene[closetObject]->getNormal(point));
-                diffuse = (toLight) * (normal);
-                if(diffuse < 0)
-                    diffuse = 0;
-                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
-                                       scene[closetObject]->getColor().getR()*AMBIENT);
-                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
-                                       scene[closetObject]->getColor().getG()*AMBIENT);
-                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
-                                       scene[closetObject]->getColor().getB()*AMBIENT);
+                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*AMBIENT);
+                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*AMBIENT);
+                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*AMBIENT);
+                shadowingObject = traceRay(Ray(point, toLight), scene, disposableTmin);
+                if(shadowingObject == -1)
+                {
+                    normal = Vec3(scene[closetObject]->getNormal(point));
+                    diffuse = (toLight) * (normal);
+                    if(diffuse < 0)
+                        diffuse = 0;
+                    imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
+                                           imagePlane[i][j]->getR());
+                    imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
+                                           imagePlane[i][j]->getG());
+                    imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
+                                           imagePlane[i][j]->getB());
+                }
             }
             /*delete normal;
             delete toLight;
@@ -182,14 +189,14 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
     }
 }
 
-int traceRay(Ray* ray, vector<GeometricObject*>& scene, double &tmin)
+int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin)
 {
     tmin = 40000;
     int closetObject = -1;
     double t;
     for(int k=0; k<scene.size(); k++)
     {
-        if(scene[k]->hitMe(t,*ray) && t<tmin)
+        if(scene[k]->hitMe(t,ray) && t<tmin)
         {
             tmin = t;
             closetObject = k;
