@@ -14,6 +14,8 @@
 using namespace  std;
 
 #define AMBIENT 10.0/255.0
+#define EPSILON 0.000001
+#define PHONGEXPONENT 100
 
 
 Camera* readCamera(const string& fileName, string& outFileName);
@@ -147,7 +149,8 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
     int closetObject, shadowingObject;
     double tmin, disposableTmin;
     double diffuse;
-    Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0);
+    double specular;
+    Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0), toEye(0,0,0), half(0,0,0);
     for(int i=0; i<camera.getSizeY(); i++)
     {
         for(int j=0; j<camera.getSizeX(); j++)
@@ -165,26 +168,31 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
                 imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*AMBIENT);
                 imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*AMBIENT);
                 imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*AMBIENT);
-                shadowingObject = traceRay(Ray(point, toLight), scene, disposableTmin);
+                shadowingObject = traceRay(Ray(point+toLight%EPSILON, toLight), scene, disposableTmin);
                 if(shadowingObject == -1)
                 {
                     normal = Vec3(scene[closetObject]->getNormal(point));
                     diffuse = (toLight) * (normal);
                     if(diffuse < 0)
                         diffuse = 0;
+                    toEye = Vec3(currentRay.getD()%(-1));
+                    toEye.normalize();
+                    half = Vec3(toLight + toEye);
+                    half.normalize();
+                    specular = half * normal;
+                    if(specular < 0)
+                        specular = 0;
                     imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
-                                           imagePlane[i][j]->getR());
+                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getR()
+                                                   + imagePlane[i][j]->getR());
                     imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
-                                           imagePlane[i][j]->getG());
+                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getG()
+                                                   + imagePlane[i][j]->getG());
                     imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
-                                           imagePlane[i][j]->getB());
+                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getB()
+                                                   + imagePlane[i][j]->getB());
                 }
             }
-            /*delete normal;
-            delete toLight;
-            delete point;*/
-            //delete currentRay;
-            //delete s;
         }
     }
 }
