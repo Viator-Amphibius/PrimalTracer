@@ -8,7 +8,7 @@
 Triangle::Triangle(const Color &color, const Vec3 &A, const Vec3 &B, const Vec3 &C) : GeometricObject(color), A(A),
                                                                                       B(B), C(C) {}
 
-bool Triangle::hitMe(double &t, const Ray &ray) {
+bool Triangle::hitMe(double &t, const Ray &ray, double t_least) {
     Matrix3 matrix(Vec3(ray.getD()),Vec3(A-B),Vec3(A-C));
     if((!matrix) == 0) //checks if the determinant is zero
         return false;
@@ -16,7 +16,7 @@ bool Triangle::hitMe(double &t, const Ray &ray) {
     t = CramerResult.getX();
     double beta = CramerResult.getY();
     double gamma = CramerResult.getZ();
-    return (t>=1 && beta>=0 && gamma>=0 && (beta+gamma)<=1);
+    return (t>=t_least && beta>=0 && gamma>=0 && (beta+gamma)<=1);
 }
 
 const Vec3 &Triangle::getA() const {
@@ -47,4 +47,8 @@ Vec3 Triangle::getNormal(const Vec3 &point) {
     Vec3 normal((B-A) ^ (C-A));
     normal.normalize();
     return normal;
+}
+
+double Triangle::getReflectance() {
+    return 0.3;
 }

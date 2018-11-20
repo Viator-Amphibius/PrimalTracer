@@ -10,8 +10,9 @@ private:
     double r;
 public:
     Sphere(Vec3 Center, double Radius, Color SphereColor);
-    bool hitMe(double& t, const Ray& ray);
+    bool hitMe(double& t, const Ray& ray, double t_least);
     Vec3 getNormal(const Vec3& point);
+    virtual double getReflectance();
 
     const Vec3 &getCenter() const;
 

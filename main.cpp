@@ -13,16 +13,21 @@
 
 using namespace  std;
 
+#define BACKGROUD_R 0
+#define BACKGROUD_G 0
+#define BACKGROUD_B 0
 #define AMBIENT 10.0/255.0
 #define EPSILON 0.000001
-#define PHONGEXPONENT 100
+#define PHONG_EXPONENT 100
+#define MAX_DEPTH 2 //When set to 1 there will be no reflections, else, there will be (depth-1) iterations of reflections
 
 
 Camera* readCamera(const string& fileName, string& outFileName);
 Color*** initImage(const Camera& camera);
 void readScene(vector<GeometricObject*>& scene, const string& sceneFileName);
 void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Camera& camera, const Light& light);
-int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin);
+bool getPixelColor(Color& Pixel, vector<GeometricObject*>& scene, const Light& light, Ray currentRay, double t_least, int depth);
+int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin, double t_least);
 void writeImage(Color*** imagePlane, string outFileName, const Camera& camera);
 
 int main() {
@@ -98,7 +103,7 @@ Color*** initImage(const Camera& camera)
     {
         for(int j=0; j<camera.getSizeX(); j++)
         {
-            imagePlan[i][j] = new Color(0,0,0);
+            imagePlan[i][j] = new Color(BACKGROUD_R,BACKGROUD_G,BACKGROUD_B);
         }
     }
     return imagePlan;
@@ -146,11 +151,7 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
     Vec3 s(0,0,0);
     double su, sv;
     Ray currentRay(Vec3(0,0,0), Vec3(0,0,0));
-    int closetObject, shadowingObject;
-    double tmin, disposableTmin;
-    double diffuse;
-    double specular;
-    Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0), toEye(0,0,0), half(0,0,0);
+    Color Pixel(0,0,0);
     for(int i=0; i<camera.getSizeY(); i++)
     {
         for(int j=0; j<camera.getSizeX(); j++)
@@ -159,52 +160,75 @@ void renderImage(vector<GeometricObject*>& scene, Color*** imagePlane, const Cam
             sv = i*camera.getPixelH() + camera.getHalfPixelH();
             s = Vec3(q + camera.getU()%su - camera.getV()%sv);
             currentRay = Ray(camera.getE(), s - camera.getE());
-            closetObject = traceRay(currentRay, scene,tmin);
-            if(closetObject > -1)
+            if(getPixelColor(Pixel,scene,light,currentRay,1,1))
             {
-                point = Vec3(currentRay.getO() + currentRay.getD()%tmin);
-                toLight = Vec3(light.getPos() - (point));
-                toLight.normalize();
-                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*AMBIENT);
-                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*AMBIENT);
-                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*AMBIENT);
-                shadowingObject = traceRay(Ray(point+toLight%EPSILON, toLight), scene, disposableTmin);
-                if(shadowingObject == -1)
-                {
-                    normal = Vec3(scene[closetObject]->getNormal(point));
-                    diffuse = (toLight) * (normal);
-                    if(diffuse < 0)
-                        diffuse = 0;
-                    toEye = Vec3(currentRay.getD()%(-1));
-                    toEye.normalize();
-                    half = Vec3(toLight + toEye);
-                    half.normalize();
-                    specular = half * normal;
-                    if(specular < 0)
-                        specular = 0;
-                    imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
-                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getR()
-                                                   + imagePlane[i][j]->getR());
-                    imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
-                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getG()
-                                                   + imagePlane[i][j]->getG());
-                    imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
-                                                   pow(specular,PHONGEXPONENT)*light.getIntensity().getB()
-                                                   + imagePlane[i][j]->getB());
-                }
+                *imagePlane[i][j] = Pixel;
             }
         }
     }
 }
 
-int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin)
+bool getPixelColor(Color& Pixel, vector<GeometricObject*>& scene, const Light& light, Ray currentRay, double t_least, int depth) {
+    int closetObject, shadowingObject;
+    double tmin, disposableTmin;
+    double diffuse;
+    double specular;
+    Vec3 toLight(0, 0, 0), point(0, 0, 0), normal(0, 0, 0), toEye(0, 0, 0), half(0, 0, 0);
+    closetObject = traceRay(currentRay, scene, tmin, t_least);
+    if (closetObject > -1) {
+        point = Vec3(currentRay.getO() + currentRay.getD() % tmin);
+        toLight = Vec3(light.getPos() - (point));
+        toLight.normalize();
+        normal = Vec3(scene[closetObject]->getNormal(point));
+        toEye = Vec3(currentRay.getD() % (-1));
+        toEye.normalize();
+        Pixel.setR(scene[closetObject]->getColor().getR() * AMBIENT);
+        Pixel.setG(scene[closetObject]->getColor().getG() * AMBIENT);
+        Pixel.setB(scene[closetObject]->getColor().getB() * AMBIENT);
+        shadowingObject = traceRay(Ray(point + toLight % EPSILON, toLight), scene, disposableTmin, t_least);
+        if (shadowingObject == -1) {
+            diffuse = (toLight) * (normal);
+            if (diffuse < 0)
+                diffuse = 0;
+            half = Vec3(toLight + toEye);
+            half.normalize();
+            specular = half * normal;
+            if (specular < 0)
+                specular = 0;
+            Pixel.setR(scene[closetObject]->getColor().getR() * light.getIntensity().getR() * diffuse +
+                       pow(specular, PHONG_EXPONENT) * light.getIntensity().getR()
+                       + Pixel.getR());
+            Pixel.setG(scene[closetObject]->getColor().getG() * light.getIntensity().getG() * diffuse +
+                       pow(specular, PHONG_EXPONENT) * light.getIntensity().getG()
+                       + Pixel.getG());
+            Pixel.setB(scene[closetObject]->getColor().getB() * light.getIntensity().getB() * diffuse +
+                       pow(specular, PHONG_EXPONENT) * light.getIntensity().getB()
+                       + Pixel.getB());
+        }
+        if(depth < MAX_DEPTH)
+        {
+            Ray mirror(point, (normal%(normal*toEye))%2 - toEye);
+            Color mirrorPixel;
+            if(getPixelColor(mirrorPixel,scene,light,mirror,EPSILON,depth+1))
+            {
+                Pixel.setR(Pixel.getR() + scene[closetObject]->getReflectance() * mirrorPixel.getR());
+                Pixel.setG(Pixel.getG() + scene[closetObject]->getReflectance() * mirrorPixel.getG());
+                Pixel.setB(Pixel.getB() + scene[closetObject]->getReflectance() * mirrorPixel.getB());
+            }
+        }
+        return true;
+    }
+    else
+        return false;
+}
+int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin, double t_least)
 {
     tmin = 40000;
     int closetObject = -1;
     double t;
     for(int k=0; k<scene.size(); k++)
     {
-        if(scene[k]->hitMe(t,ray) && t<tmin)
+        if(scene[k]->hitMe(t,ray,t_least) && t<tmin)
         {
             tmin = t;
             closetObject = k;
@@ -261,3 +285,44 @@ void writeImage(Color*** imagePlane, string outFileName, const Camera& camera)
             cout << s->getColor().getR() << " " << s->getColor().getG() << " " << s->getColor().getB() <<endl;
         }
     }*/
+
+/*
+            int closetObject, shadowingObject;
+            double tmin, disposableTmin;
+            double diffuse;
+            double specular;
+            Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0), toEye(0,0,0), half(0,0,0);
+            closetObject = traceRay(currentRay, scene,tmin);
+            if(closetObject > -1)
+            {
+                point = Vec3(currentRay.getO() + currentRay.getD()%tmin);
+                toLight = Vec3(light.getPos() - (point));
+                toLight.normalize();
+                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*AMBIENT);
+                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*AMBIENT);
+                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*AMBIENT);
+                shadowingObject = traceRay(Ray(point+toLight%EPSILON, toLight), scene, disposableTmin);
+                if(shadowingObject == -1)
+                {
+                    normal = Vec3(scene[closetObject]->getNormal(point));
+                    diffuse = (toLight) * (normal);
+                    if(diffuse < 0)
+                        diffuse = 0;
+                    toEye = Vec3(currentRay.getD()%(-1));
+                    toEye.normalize();
+                    half = Vec3(toLight + toEye);
+                    half.normalize();
+                    specular = half * normal;
+                    if(specular < 0)
+                        specular = 0;
+                    imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
+                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getR()
+                                                   + imagePlane[i][j]->getR());
+                    imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
+                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getG()
+                                                   + imagePlane[i][j]->getG());
+                    imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
+                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getB()
+                                                   + imagePlane[i][j]->getB());
+                }
+            }*/

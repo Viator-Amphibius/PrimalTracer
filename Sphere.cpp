@@ -4,7 +4,7 @@ Sphere::Sphere(Vec3 Center, double Radius, Color SphereColor) : GeometricObject(
 {
     r = Radius;
 }
-bool Sphere::hitMe(double &t, const Ray &ray)
+bool Sphere::hitMe(double &t, const Ray &ray, double t_least)
 {
     double A = ray.getD() * ray.getD();
     double B = 2 * (ray.getD() * (ray.getO()-center));
@@ -15,10 +15,10 @@ bool Sphere::hitMe(double &t, const Ray &ray)
     else //also includes delta==0 (avoided implementing separately not to worry about double comparison)
     {
         t = (-1.0*B - sqrt(delta))/(2.0*A);
-        if(t>=1)
+        if(t>=t_least)
             return true;
         t = (-1.0*B + sqrt(delta))/(2.0*A);
-        if(t>=1)
+        if(t>=t_least)
             return true;
         else
             return false;
@@ -45,4 +45,8 @@ Vec3 Sphere::getNormal(const Vec3 &point) {
     Vec3 normal(point-center);
     normal.normalize();
     return normal;
+}
+
+double Sphere::getReflectance() {
+    return 0.3;
 }

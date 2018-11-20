@@ -11,8 +11,9 @@ private:
     Vec3 C;
 public:
     Triangle(const Color &color, const Vec3 &A, const Vec3 &B, const Vec3 &C);
-    bool hitMe(double& t, const Ray& ray);
+    bool hitMe(double& t, const Ray& ray, double t_least);
     Vec3 getNormal(const Vec3& point);
+    virtual double getReflectance();
     const Vec3 &getA() const;
 
     void setA(const Vec3 &A);
