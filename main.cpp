@@ -1,9 +1,10 @@
 #include <iostream>
+#include <stdlib.h>
 #include <vector>
 #include "Vec3.h"
 #include "Camera.h"
 #include "Color.h"
-#include "fstream"
+#include <fstream>
 #include "GeometricObject.h"
 #include "Sphere.h"
 #include "Ray.h"
@@ -30,9 +31,28 @@ bool getPixelColor(Color& Pixel, vector<GeometricObject*>& scene, const Light& l
 int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin, double t_least);
 void writeImage(Color*** imagePlane, string outFileName, const Camera& camera);
 
-int main() {
+/*
+ Commands for running using g++
+ >g++ main.cpp Vec3.h Vec3.cpp Matrix3.h Matrix3.cpp Ray.h Ray.cpp Color.h Color.cpp Light.h Light.cpp GeometricObject.h GeometricObject.cpp Triangle.h Triangle.cpp Sphere.h Sphere.cpp Camera.h Camera.cpp
+ >a simple_camera.txt simple_scene.txt
+ */
+
+int main(int argc, char** argv) {
     string outFileName;
-    Camera* camera = readCamera("..\\simple_camera.txt",outFileName);
+    string cameraFileName;
+    string sceneFileName;
+    if(argc >=3)
+    {
+        cameraFileName = argv[1];
+        sceneFileName = argv[2];
+    }
+    else
+    {
+        cout << "Invalid command line arguments, running the program using default file names (simple_camera.txt, simple_scene.txt)" << endl;
+        cameraFileName = "simple_camera.txt";
+        sceneFileName = "simple_scene.txt";
+    }
+    Camera* camera = readCamera(cameraFileName,outFileName);
     if(!camera)
     {
         cout << "Problem creating the camera" << endl;
@@ -40,7 +60,7 @@ int main() {
     }
     Color*** imagePlane = initImage(*camera);
     std::vector<GeometricObject*> scene;
-    readScene(scene,"..\\simple_scene.txt");
+    readScene(scene,sceneFileName);
 
     Light light(Vec3(30,10,10), Color(200.0/255.0,200.0/255.0,200.0/255.0));
     renderImage(scene, imagePlane, *camera, light);
@@ -51,7 +71,7 @@ int main() {
 Camera* readCamera(const string& fileName, string& outFileName)
 {
     ifstream cameraFile;
-    cameraFile.open(fileName);
+    cameraFile.open(fileName.c_str());
     if(!cameraFile)
     {
         cout << "Can't open the camera file" << endl;
@@ -59,7 +79,7 @@ Camera* readCamera(const string& fileName, string& outFileName)
     }
     double x,y,z,l,r,b,t,d;
     int sizeX,sizeY;
-    Vec3* e = nullptr;  Vec3* gaze = nullptr; Vec3* v = nullptr;
+    Vec3* e = NULL;  Vec3* gaze = NULL; Vec3* v = NULL;
     if(cameraFile >> x >> y >> z)
     {
         e = new Vec3(x,y,z);
@@ -79,7 +99,7 @@ Camera* readCamera(const string& fileName, string& outFileName)
         return new Camera(*e,*gaze,*v,l,r,b,t,d,sizeX,sizeY);
     }
     cameraFile.close();
-    return nullptr;
+    return NULL;
 }
 
 Color*** initImage(const Camera& camera)
@@ -112,7 +132,7 @@ Color*** initImage(const Camera& camera)
 void readScene(vector<GeometricObject*>& scene, const string& sceneFileName)
 {
     ifstream sceneFile;
-    sceneFile.open(sceneFileName);
+    sceneFile.open(sceneFileName.c_str());
     if(!sceneFile)
     {
         cout << "Can't open the scene file" << endl;
@@ -221,6 +241,7 @@ bool getPixelColor(Color& Pixel, vector<GeometricObject*>& scene, const Light& l
     else
         return false;
 }
+
 int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin, double t_least)
 {
     tmin = 40000;
@@ -240,7 +261,12 @@ int traceRay(Ray ray, vector<GeometricObject*>& scene, double &tmin, double t_le
 void writeImage(Color*** imagePlane, string outFileName, const Camera& camera)
 {
     ofstream imageFile;
-    imageFile.open("..\\"+outFileName);
+    imageFile.open(outFileName.c_str());
+    if(!imageFile.is_open())
+    {
+        cout << "Cannot open file for writing" << endl;
+        exit(6);
+    }
     imageFile << "P3" << endl;
     imageFile << "# " << outFileName << endl;
     imageFile << camera.getSizeX() << " " << camera.getSizeY() << endl;
@@ -253,76 +279,6 @@ void writeImage(Color*** imagePlane, string outFileName, const Camera& camera)
         }
         imageFile << endl;
     }
+    cout << outFileName << " was written successfully" << endl;
     imageFile.close();
 }
-
-/*
-    std::cout << "Hello, World!" << std::endl;
-    Vec3 v1(1,2,3);
-    Vec3 v2(6,7,8);
-    cout << (v1^v2) << endl;
-    cout << (v2^v1) << endl;
-    cout << (v2*v1) << endl;
-    cout << (v2+v1) << endl;
-    cout << (v2-v1) << endl;
-    cout << (v1%3) << endl;
-    cout << (v1==v2) << endl;
-    cout << (v1==v1) << endl;
-    cout << ((Vec3(1,2,1))|(Vec3(1,-1,5))) <<endl;
-    v1.normalize();
-    v2.normalize();
-    cout <<  v1 << v1.length() << v2 << v2.length() << endl;
-    cout << 0.267261 << 0.267261*2 << 0.267261*3 << endl;
-*/
-
-/*for(GeometricObject* geo:scene)
-    {
-        Sphere* s = dynamic_cast<Sphere *> (geo);
-        if(s)
-        {
-            cout << s->getCenter().getX() << " " << s->getCenter().getY() << " " << s->getCenter().getZ() <<endl;
-            cout << s->getR() << endl;
-            cout << s->getColor().getR() << " " << s->getColor().getG() << " " << s->getColor().getB() <<endl;
-        }
-    }*/
-
-/*
-            int closetObject, shadowingObject;
-            double tmin, disposableTmin;
-            double diffuse;
-            double specular;
-            Vec3 toLight(0,0,0), point(0,0,0), normal(0,0,0), toEye(0,0,0), half(0,0,0);
-            closetObject = traceRay(currentRay, scene,tmin);
-            if(closetObject > -1)
-            {
-                point = Vec3(currentRay.getO() + currentRay.getD()%tmin);
-                toLight = Vec3(light.getPos() - (point));
-                toLight.normalize();
-                imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*AMBIENT);
-                imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*AMBIENT);
-                imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*AMBIENT);
-                shadowingObject = traceRay(Ray(point+toLight%EPSILON, toLight), scene, disposableTmin);
-                if(shadowingObject == -1)
-                {
-                    normal = Vec3(scene[closetObject]->getNormal(point));
-                    diffuse = (toLight) * (normal);
-                    if(diffuse < 0)
-                        diffuse = 0;
-                    toEye = Vec3(currentRay.getD()%(-1));
-                    toEye.normalize();
-                    half = Vec3(toLight + toEye);
-                    half.normalize();
-                    specular = half * normal;
-                    if(specular < 0)
-                        specular = 0;
-                    imagePlane[i][j]->setR(scene[closetObject]->getColor().getR()*light.getIntensity().getR()*diffuse +
-                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getR()
-                                                   + imagePlane[i][j]->getR());
-                    imagePlane[i][j]->setG(scene[closetObject]->getColor().getG()*light.getIntensity().getG()*diffuse +
-                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getG()
-                                                   + imagePlane[i][j]->getG());
-                    imagePlane[i][j]->setB(scene[closetObject]->getColor().getB()*light.getIntensity().getB()*diffuse +
-                                                   pow(specular,PHONG_EXPONENT)*light.getIntensity().getB()
-                                                   + imagePlane[i][j]->getB());
-                }
-            }*/

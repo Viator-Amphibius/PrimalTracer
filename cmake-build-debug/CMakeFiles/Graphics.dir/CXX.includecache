@@ -51,6 +51,8 @@ iostream
 C:/Users/khale/CLionProjects/Graphics/main.cpp
 iostream
 -
+stdlib.h
+-
 vector
 -
 Vec3.h
@@ -60,7 +62,7 @@ C:/Users/khale/CLionProjects/Graphics/Camera.h
 Color.h
 C:/Users/khale/CLionProjects/Graphics/Color.h
 fstream
-C:/Users/khale/CLionProjects/Graphics/fstream
+-
 GeometricObject.h
 C:/Users/khale/CLionProjects/Graphics/GeometricObject.h
 Sphere.h
